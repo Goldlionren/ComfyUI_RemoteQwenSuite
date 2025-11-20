@@ -1,0 +1,22 @@
+# Core libraries
+torch
+transformers>=4.36.0
+accelerate>=0.25.0
+
+# Qwen-VL Utils
+qwen-vl-utils>=0.0.8
+
+# Web server
+fastapi>=0.104.0
+uvicorn[standard]>=0.23.2
+pydantic>=2.0.0
+
+# Image processing
+Pillow>=10.0.0
+
+# Quantization (for NF4 / 4bit server)
+bitsandbytes>=0.43.0
+
+# Optional: for safety, avoid huggingface warnings
+sentencepiece
+protobuf
