@@ -373,6 +373,36 @@ docker run --device /dev/kfd --device /dev/dri -p 8008:8008 \
 
 ---
 
+
+## docker-compose 部署｜Using docker-compose
+
+````md
+## 🧩 docker-compose 部署｜Using docker-compose
+
+本仓库在 `docker/docker-compose.yml` 中提供了多平台的示例配置：
+
+- `qwen-remote-cuda` – NVIDIA CUDA
+- `qwen-remote-xpu` – Intel XPU / Arc
+- `qwen-remote-rocm` – AMD ROCm
+
+在仓库根目录运行（示例：CUDA）：
+
+```bash
+docker compose -f docker/docker-compose.yml --profile cuda up -d qwen-remote-cuda
+````
+
+To stop all services:
+
+```bash
+docker compose -f docker/docker-compose.yml down
+```
+
+You can override the default model via `.env`:
+
+```bash
+echo 'QWEN_MODEL_ID=Qwen/Qwen2.5-VL-7B-Instruct' > .env
+```
+
 # 🌐 API Endpoints｜API 接口说明
 
 ## `/health`

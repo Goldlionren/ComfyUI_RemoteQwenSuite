@@ -1,0 +1,73 @@
+version: "3.9"
+
+services:
+  # =========================
+  # NVIDIA CUDA 版 Qwen Remote
+  # =========================
+  qwen-remote-cuda:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.cuda
+    container_name: qwen-remote-cuda
+    # 如果你本机 docker 支持 gpus 字段（推荐）
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - capabilities: ["gpu"]
+    # 对于 desktop docker，可以直接用 gpus: all（需要 docker compose v2）
+    # gpus: all
+    ports:
+      - "8008:8008"
+    environment:
+      # 可以通过 .env 覆盖
+      - QWEN_MODEL_ID=${QWEN_MODEL_ID:-Qwen/Qwen2.5-VL-7B-Instruct}
+      - QWEN_USE_4BIT=${QWEN_USE_4BIT:-1}
+    volumes:
+      - hf_cache:/data/huggingface
+    profiles:
+      - cuda
+
+  # =========================
+  # Intel XPU / Arc 版
+  # =========================
+  qwen-remote-xpu:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.xpu
+    container_name: qwen-remote-xpu
+    devices:
+      - "/dev/dri:/dev/dri"
+    ports:
+      - "8008:8008"
+    environment:
+      - QWEN_MODEL_ID=${QWEN_MODEL_ID:-Qwen/Qwen2.5-VL-7B-Instruct}
+      - QWEN_USE_4BIT=0
+    volumes:
+      - hf_cache:/data/huggingface
+    profiles:
+      - xpu
+
+  # =========================
+  # AMD ROCm 版
+  # =========================
+  qwen-remote-rocm:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.rocm
+    container_name: qwen-remote-rocm
+    devices:
+      - "/dev/kfd:/dev/kfd"
+      - "/dev/dri:/dev/dri"
+    ports:
+      - "8008:8008"
+    environment:
+      - QWEN_MODEL_ID=${QWEN_MODEL_ID:-Qwen/Qwen2.5-VL-7B-Instruct}
+      - QWEN_USE_4BIT=0
+    volumes:
+      - hf_cache:/data/huggingface
+    profiles:
+      - rocm
+
+volumes:
+  hf_cache:
