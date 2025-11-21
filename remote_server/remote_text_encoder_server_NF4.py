@@ -22,11 +22,17 @@ QWEN_IMAGE_EDIT_SYSTEM_PROMPT = (
 # ==========================
 # 配置区域：可以按需要改
 # ==========================
-#MODEL_ID = "Qwen/Qwen2.5-VL-7B-Instruct"
-MODEL_ID = "prithivMLmods/Qwen2.5-VL-7B-Abliterated-Caption-it"
+# 优先用环境变量 QWEN_MODEL_ID，否则用默认值
+MODEL_ID = os.getenv(
+    "QWEN_MODEL_ID",
+    "prithivMLmods/Qwen2.5-VL-7B-Abliterated-Caption-it",
+)
 
-# 是否开启 4bit 量化（仅 CUDA 有效）
-USE_4BIT = True
+# 是否开启 4bit 量化：
+# - 仅在 CUDA 上有效
+# - 默认开启，可以通过 env QWEN_USE_4BIT=0 关闭
+USE_4BIT = os.getenv("QWEN_USE_4BIT", "1") == "1"
+
 
 def pick_device() -> torch.device:
     """

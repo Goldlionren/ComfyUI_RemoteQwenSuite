@@ -1,0 +1,18 @@
+FROM rocm/pytorch:rocm6.2_ubuntu22.04_py3.10_pytorch_2.5.1
+
+ENV PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    HF_HOME=/data/huggingface
+
+WORKDIR /app
+
+COPY ../server /app/server
+COPY requirements.txt /app/requirements.txt
+
+# 也不要 pip 重新安装 pytorch
+RUN pip install --upgrade pip && \
+    pip install -r requirements.txt
+
+EXPOSE 8008
+
+CMD ["python", "server/remote_text_encoder_server.py"]

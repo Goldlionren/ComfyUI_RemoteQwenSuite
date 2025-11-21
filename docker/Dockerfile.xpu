@@ -1,0 +1,18 @@
+FROM intel/intel-extension-for-pytorch:2.3.0-xpu
+
+ENV PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    HF_HOME=/data/huggingface
+
+WORKDIR /app
+
+COPY ../server /app/server
+COPY requirements.txt /app/requirements.txt
+
+# requirements.txt 内请务必删除 torch==
+RUN pip install --upgrade pip && \
+    pip install -r requirements.txt
+
+EXPOSE 8008
+
+CMD ["python", "server/remote_text_encoder_server.py"]

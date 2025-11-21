@@ -1,0 +1,6 @@
+transformers>=4.46.0
+accelerate>=1.0.0
+fastapi>=0.115.0
+uvicorn[standard]>=0.32.0
+qwen-vl-utils>=0.0.8
+bitsandbytes>=0.44.1   # 在 XPU/ROCm 下虽然不会用，但不会报错

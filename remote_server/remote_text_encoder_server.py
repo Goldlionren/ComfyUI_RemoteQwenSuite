@@ -21,7 +21,11 @@ QWEN_IMAGE_EDIT_SYSTEM_PROMPT = (
 # ==========================
 # 配置区域：可以按需要改
 # ==========================
-MODEL_ID = "Qwen/Qwen2.5-VL-7B-Instruct"
+MODEL_ID = os.getenv(
+    "QWEN_MODEL_ID",
+    "Qwen/Qwen2.5-VL-7B-Instruct",
+)
+
 
 
 def pick_device() -> torch.device:

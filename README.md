@@ -223,3 +223,35 @@ These conditioning outputs can be fed into:
 
 ```
 ```
+
+### Docker 支持命令
+
+#### NVIDIA：
+
+```bash
+docker build -f docker/Dockerfile.cuda -t qwen-remote:cuda .
+docker run --gpus all -p 8008:8008 \
+    -e QWEN_MODEL_ID="Qwen/Qwen2.5-VL-7B-Instruct" \
+    qwen-remote:cuda
+```
+
+#### Intel XPU：
+
+```bash
+docker build -f docker/Dockerfile.xpu -t qwen-remote:xpu .
+docker run --device /dev/dri -p 8008:8008 \
+    -e QWEN_MODEL_ID="Qwen/Qwen2.5-VL-7B-Instruct" \
+    qwen-remote:xpu
+```
+
+#### AMD ROCm：
+
+```bash
+docker build -f docker/Dockerfile.rocm -t qwen-remote:rocm .
+docker run --device /dev/kfd --device /dev/dri -p 8008:8008 \
+    -e QWEN_MODEL_ID="Qwen/Qwen2.5-VL-7B-Instruct" \
+    qwen-remote:rocm
+```
+
+---
+
