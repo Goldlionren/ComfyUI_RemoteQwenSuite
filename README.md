@@ -255,3 +255,210 @@ docker run --device /dev/kfd --device /dev/dri -p 8008:8008 \
 
 ---
 
+
+# Updated on 21/11/2025 中文说明
+---
+
+# **🔥 ComfyUI Remote Qwen Suite**
+
+**Run Qwen-VL text encoder remotely to save VRAM, accelerate pipelines, and enable multi-GPU / multi-node AI workflows.**
+**通过远程方式运行 Qwen-VL 文本编码器，实现显存解放、跨设备加速、以及多节点协同 AI 工作流。**
+
+---
+
+## 🚀 Overview｜概述
+
+**ComfyUI Remote Qwen Suite** 让你可以将 Qwen2.5-VL（或其他 Qwen-VL 模型）完全从 **主 GPU（如 CUDA）卸载** 到：
+
+* 🟩 NVIDIA CUDA（支持 4-bit NF4 量化）
+* 🟦 Intel XPU / Arc GPU
+* 🟥 AMD ROCm GPU
+* 或 CPU
+
+通过远程 API 方式处理 CLIP/TextEncoder 工作负载，让主 GPU 专注在：
+
+* UNet
+* VAE
+* KSampler
+* ControlNet
+
+最终实现你的理念：
+
+> **“让 CUDA 只干刀刃上的活。”**
+
+---
+
+## 🧩 Features｜主要功能
+
+* ✨ **远程 TextEncoder / CLIP（支持 TXT & 图文）**
+* ✨ **自动选择硬件：CUDA / XPU / ROCm / CPU**
+* ✨ **环境变量控制模型（无需改代码）**
+* ✨ **支持 NF4 / 4bit 量化（仅 NVIDIA）**
+* ✨ **与 ComfyUI 无缝对接（custom node）**
+* ✨ **轻量 FastAPI 服务，可部署到任何服务器、NAS、Docker、Cloud**
+
+---
+
+# 📦 Repository Structure｜项目结构
+
+```
+ComfyUI_RemoteQwenSuite/
+│
+├── comfy_node/                     # ComfyUI 自定义节点
+│
+├── remote_server/                  # 远程 Qwen-VL 服务器
+│   ├── remote_text_encoder_server.py
+│   ├── remote_text_encoder_server_NF4.py
+│   ├── qwen_vl_utils.py
+│   └── requirements.txt
+│
+├── docker/                         # Docker 部署
+│   ├── Dockerfile.cuda
+│   ├── Dockerfile.xpu
+│   ├── Dockerfile.rocm
+│   └── requirements.txt
+│
+└── README.md
+```
+
+---
+
+# ⚙️ Install & Run Remote Server｜安装与运行远程服务器
+
+## ⭐ 环境变量（必读）
+
+| 环境变量                | 功能                  | 示例                            |
+| ------------------- | ------------------- | ----------------------------- |
+| `QWEN_MODEL_ID`     | 指定 HF 模型            | `Qwen/Qwen2.5-VL-7B-Instruct` |
+| `QWEN_USE_4BIT`     | 是否启用 NF4 量化（仅 CUDA） | `1` 或 `0`                     |
+| `QWEN_DEBUG_TOKENS` | 调试：打印 token 长度      | `1`                           |
+
+---
+
+# 🐳 Run with Docker｜使用 Docker 运行
+
+## 1) NVIDIA CUDA
+
+```bash
+docker build -f docker/Dockerfile.cuda -t qwen-remote:cuda .
+docker run --gpus all -p 8008:8008 \
+  -e QWEN_MODEL_ID="Qwen/Qwen2.5-VL-7B-Instruct" \
+  -e QWEN_USE_4BIT=1 \
+  -v /data/hf:/data/huggingface \
+  qwen-remote:cuda
+```
+
+---
+
+## 2) Intel XPU (Arc / Max)
+
+```bash
+docker build -f docker/Dockerfile.xpu -t qwen-remote:xpu .
+docker run --device /dev/dri -p 8008:8008 \
+  -e QWEN_MODEL_ID="Qwen/Qwen2.5-VL-7B-Instruct" \
+  -e QWEN_USE_4BIT=0 \
+  qwen-remote:xpu
+```
+
+---
+
+## 3) AMD ROCm
+
+```bash
+docker build -f docker/Dockerfile.rocm -t qwen-remote:rocm .
+docker run --device /dev/kfd --device /dev/dri -p 8008:8008 \
+  -e QWEN_MODEL_ID="Qwen/Qwen2.5-VL-7B-Instruct" \
+  qwen-remote:rocm
+```
+
+---
+
+# 🌐 API Endpoints｜API 接口说明
+
+## `/health`
+
+```json
+{
+  "status": "ok",
+  "device": "cuda",
+  "dtype": "torch.bfloat16",
+  "model_id": "Qwen/Qwen2.5-VL-7B-Instruct"
+}
+```
+
+---
+
+## `/encode` (核心接口)
+
+### Request (TXT)
+
+```json
+{
+  "mode": "txt",
+  "prompt": "a beautiful girl with silver hair",
+  "negative_prompt": ""
+}
+```
+
+### Request (IMG + TXT)
+
+```json
+{
+  "mode": "img",
+  "prompt": "make her smile",
+  "negative_prompt": "",
+  "image": "data:image;base64,XXX"
+}
+```
+
+### Response
+
+```json
+{
+  "seq_len": 256,
+  "hidden_dim": 4096,
+  "cond": [...],
+  "uncond": [...]
+}
+```
+
+---
+
+# 🎨 Using in ComfyUI｜在 ComfyUI 中使用
+
+1. 安装本仓库（放到 `ComfyUI/custom_nodes/`）
+2. 在 workflow 中添加 **Remote Qwen CLIP** 节点
+3. 设置：
+
+   * `server_url`: `http://<ip>:8008/encode`
+   * `mode`: `txt` 或 `img`
+   * 自动输出 cond/uncond tokens 注入 KSampler
+
+---
+
+# 🧱 Architecture｜架构图
+
+```
++------------------------+         +---------------------------+
+|       ComfyUI PC       |         |     Remote Qwen Server    |
+|   (CUDA 专心跑 UNet)    |  HTTP   |  (CUDA / XPU / ROCm / CPU) |
+|                        | <-----> |                           |
+|  +-------------------+ |         | +-----------------------+ |
+|  | RemoteQwen Node   | |         | | Qwen2.5-VL TextEncoder| |
+|  +-------------------+ |         | +-----------------------+ |
++------------------------+         +---------------------------+
+```
+
+---
+
+# 📜 License
+
+MIT License
+
+---
+
+# 🙌 Credits｜致谢
+
+本项目由 **James Ren** 构建，旨在推进多设备 AI 加速架构：“让 CUDA 只做刀刃上的活”。
+
+---
