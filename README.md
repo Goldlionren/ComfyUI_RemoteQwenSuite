@@ -403,6 +403,12 @@ You can override the default model via `.env`:
 echo 'QWEN_MODEL_ID=Qwen/Qwen2.5-VL-7B-Instruct' > .env
 ```
 
+or if you any modified version of Qwen2.5-VL
+
+```bash
+echo 'QWEN_MODEL_ID=prithivMLmods/Qwen2.5-VL-7B-Abliterated-Caption-it' > .env
+```
+
 # 🌐 API Endpoints｜API 接口说明
 
 ## `/health`

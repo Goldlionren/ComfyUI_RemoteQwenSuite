@@ -6,12 +6,17 @@ ENV PYTHONUNBUFFERED=1 \
 
 WORKDIR /app
 
+# 这里的路径以 build context 为根目录，
+# docker-compose.yml 中 context: .. => 仓库根目录
 COPY remote_server /app/remote_server
 COPY docker/requirements.txt /app/requirements.txt
 
 RUN pip install --upgrade pip && \
-    pip install -r requirements.txt
+    pip install -r /app/requirements.txt
 
 EXPOSE 8008
 
-CMD ["python", "server/remote_text_encoder_server_NF4.py"]
+WORKDIR /app/remote_server
+
+# 默认使用 NF4 版本（CUDA 上支持 4bit）
+CMD ["python", "remote_text_encoder_server_NF4.py"]

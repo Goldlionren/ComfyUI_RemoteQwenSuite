@@ -9,10 +9,11 @@ WORKDIR /app
 COPY remote_server /app/remote_server
 COPY docker/requirements.txt /app/requirements.txt
 
-# 也不要 pip 重新安装 pytorch
 RUN pip install --upgrade pip && \
-    pip install -r requirements.txt
+    pip install -r /app/requirements.txt
 
 EXPOSE 8008
 
-CMD ["python", "server/remote_text_encoder_server.py"]
+WORKDIR /app/remote_server
+
+CMD ["python", "remote_text_encoder_server.py"]
